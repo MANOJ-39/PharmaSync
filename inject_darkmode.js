@@ -1,0 +1,61 @@
+const fs = require('fs');
+let file = 'frontend/src/index.css';
+let content = fs.readFileSync(file, 'utf8');
+
+if (!content.includes('html.dark')) {
+    content += `
+
+/* Global Dark Mode Overrides for Legacy Light Theme Components */
+html.dark {
+  background-color: #121212 !important;
+  color: #e5e5e5;
+}
+
+html.dark body {
+  background-color: #121212 !important;
+}
+
+html.dark .bg-white {
+  background-color: #1e1e1e !important;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #181818 !important;
+}
+
+html.dark .bg-gray-100 {
+  background-color: #2a2a2a !important;
+}
+
+html.dark .text-gray-800, html.dark .text-gray-900, html.dark .text-gray-700 {
+  color: #f3f4f6 !important;
+}
+
+html.dark .text-gray-600, html.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+html.dark .border-gray-100, html.dark .border-gray-200, html.dark .border-gray-300 {
+  border-color: #333333 !important;
+}
+
+html.dark input, html.dark select, html.dark textarea {
+  background-color: #1a1a1a !important;
+  color: #f3f4f6 !important;
+  border-color: #333333 !important;
+}
+
+/* Maintain the antigravity olive green theme accent */
+html.dark .bg-\\[\\#7a8b54\\] {
+  background-color: #6b7b4a !important;
+}
+
+html.dark .text-\\[\\#7a8b54\\] {
+  color: #8c9d66 !important;
+}
+`;
+    fs.writeFileSync(file, content, 'utf8');
+    console.log('Injected global dark mode styles');
+} else {
+    console.log('Styles already present');
+}
