@@ -26,7 +26,6 @@ public class ExpiryAndReorderService {
     private final ProductRepository productRepository;
     private final NotificationRepository notificationRepository;
     private final ReorderSuggestionRepository reorderSuggestionRepository;
-    private final com.smartinventory.app.messaging.NotificationProducer notificationProducer;
 
     // Runs every day at 00:01 AM
     // @Scheduled(cron = "0 1 0 * * ?")
@@ -43,7 +42,12 @@ public class ExpiryAndReorderService {
             if (!"EXPIRED".equals(b.getStatus())) {
                 b.setStatus("EXPIRED");
                 batchRepository.save(b);
-                notificationProducer.sendNotificationEvent("EXPIRED", "Batch " + b.getBatchNumber() + " of product " + b.getProduct().getName() + " has expired with " + b.getAvailableQuantity() + " units remaining.", "CRITICAL");
+                notificationRepository.save(Notification.builder()
+                        .type("EXPIRED")
+                        .message("Batch " + b.getBatchNumber() + " of product " + b.getProduct().getName() + " has expired with " + b.getAvailableQuantity() + " units remaining.")
+                        .severity("CRITICAL")
+                        .read(false)
+                        .build());
             }
         }
 
@@ -53,7 +57,12 @@ public class ExpiryAndReorderService {
             if (!"EXPIRING_WITHIN_7_DAYS".equals(b.getStatus()) && !"EXPIRED".equals(b.getStatus())) {
                 b.setStatus("EXPIRING_WITHIN_7_DAYS");
                 batchRepository.save(b);
-                notificationProducer.sendNotificationEvent("EXPIRING_SOON", "Batch " + b.getBatchNumber() + " expires in less than 7 days.", "WARNING");
+                notificationRepository.save(Notification.builder()
+                        .type("EXPIRING_SOON")
+                        .message("Batch " + b.getBatchNumber() + " expires in less than 7 days.")
+                        .severity("WARNING")
+                        .read(false)
+                        .build());
             }
         }
     }
@@ -72,7 +81,12 @@ public class ExpiryAndReorderService {
             if (currentStock > req.getProduct().getReorderLevel()) {
                 req.setStatus("RESOLVED");
                 reorderSuggestionRepository.save(req);
-                notificationProducer.sendNotificationEvent("STOCK_RESTOCKED", "Product " + req.getProduct().getName() + " is back in stock. Current stock: " + currentStock, "INFO");
+                notificationRepository.save(Notification.builder()
+                        .type("STOCK_RESTOCKED")
+                        .message("Product " + req.getProduct().getName() + " is back in stock. Current stock: " + currentStock)
+                        .severity("INFO")
+                        .read(false)
+                        .build());
                 List<Notification> notifs = notificationRepository.findAll();
                 for(Notification n : notifs) {
                     if (n.getMessage().contains(req.getProduct().getName()) && n.getType().equals("LOW_STOCK")) {
@@ -97,7 +111,12 @@ public class ExpiryAndReorderService {
                             .status("PENDING")
                             .build();
                     reorderSuggestionRepository.save(suggestion);
-                    notificationProducer.sendNotificationEvent("LOW_STOCK", "Product " + product.getName() + " has dropped below reorder level. Current stock: " + currentStock, "WARNING");
+                    notificationRepository.save(Notification.builder()
+                            .type("LOW_STOCK")
+                            .message("Product " + product.getName() + " has dropped below reorder level. Current stock: " + currentStock)
+                            .severity("WARNING")
+                            .read(false)
+                            .build());
                 }
             }
         }
